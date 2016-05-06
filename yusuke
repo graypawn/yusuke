@@ -1,0 +1,86 @@
+#!/bin/bash
+# Copyright (C) 2016  graypawn <choi.pawn@gmail.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+version=0.1
+tmpdir=/tmp/yusuke
+pidfile=/tmp/yusuke/pid
+icon=system-software-update
+interval=10
+
+function version_info() {
+    echo "Yusuke v$version"
+    echo "Copyrig ht (C) 2016 graypawn <choi.pawn@gmail.com>"
+    echo "GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>."
+    echo "This is free software: you are free to change and redistribute it."
+    echo "There is NO WARRANTY, to the extent permitted by law."
+}
+
+function usage_info() {
+    echo "Usage: yusuke [OPTION]"
+}
+
+function help_info() {
+    usage_info
+    echo "pacman update notifier"
+    echo ""
+    echo "    --help      display this help and exit"
+    echo "    --version   output version information and exit"
+}
+
+function daemon() {
+    echo $BASHPID > $tmpdir/pid
+
+    while true; do
+        fakeroot pacman -Sy --dbpath=$tmpdir >/dev/null
+        update_pkg=$(pacman -Qu)
+        pkg_num=$(echo "$update_pkg" | wc -l)
+
+        if [ pkg_num != 0 ]; then
+            notify-send "$pkg_num Update(s) Available" "$update_pkg" -i $icon
+        fi
+
+        sleep $interval
+    done
+}
+
+function start() {
+    if ! [ -d $tmpdir ]; then
+        mkdir $tmpdir
+    fi
+
+    daemon &
+}
+
+function stop() {
+    if ! [ -r $tmpdir/pid ]; then
+        echo "$0: No such yusuke daemon" >&2
+        exit 1
+    fi
+
+    kill $(cat $tmpdir/pid)
+    rm $tmpdir/pid
+}
+
+case ${1} in
+    "--help")
+        help_info
+        exit 0 ;;
+
+    "--version")
+        version_info
+        exit 0 ;;
+
+    start)
+        start ;;
+
+    stop)
+        stop ;;
+
+    *)
+        usage_info >&2
+        exit 1 ;;
+esac
