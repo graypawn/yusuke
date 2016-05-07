@@ -5,11 +5,11 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-version=0.1
+version=1.0
 tmpdir=/tmp/yusuke
 pidfile=/tmp/yusuke/pid
 icon=system-software-update
-interval=10
+interval=1h
 
 function version_info() {
     echo "Yusuke v$version"
@@ -27,12 +27,23 @@ function help_info() {
     usage_info
     echo "pacman update notifier"
     echo ""
+    echo "    start       start daemon"
+    echo "    stop        stop daemon"
     echo "    --help      display this help and exit"
     echo "    --version   output version information and exit"
 }
 
+# check internet connection
+function is_connecting() {
+    ping -c 1 8.8.8.8 >/dev/null 2>&1
+}
+
 function daemon() {
     echo $BASHPID > $tmpdir/pid
+
+    while ! is_connecting; do
+        sleep 1m
+    done
 
     while true; do
         fakeroot pacman -Sy --dbpath=$tmpdir >/dev/null
@@ -47,12 +58,25 @@ function daemon() {
     done
 }
 
+# check running daemon
+function is_running() {
+    if [ -r $tmpdir/pid ]; then
+        return 0
+    fi
+    return 1
+}
+
 function start() {
+    if is_running; then
+        echo "Yusuke is already running!"
+        exit 1
+    fi
+    echo "Starting Yusuke..."
     if ! [ -d $tmpdir ]; then
         mkdir $tmpdir
     fi
-
     daemon &
+    echo "Done!"
 }
 
 function stop() {
@@ -63,6 +87,7 @@ function stop() {
 
     kill $(cat $tmpdir/pid)
     rm $tmpdir/pid
+    echo "Yusuke daemon stopped."
 }
 
 case ${1} in
