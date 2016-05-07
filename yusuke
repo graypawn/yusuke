@@ -5,11 +5,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-version=1.0
+version=1.2
 tmpdir=/tmp/yusuke
 pidfile=/tmp/yusuke/pid
 icon=system-software-update
 interval=1h
+share_dir=/usr/share/yusuke
 
 function version_info() {
     echo "Yusuke v$version"
@@ -29,6 +30,8 @@ function help_info() {
     echo ""
     echo "    start       start daemon"
     echo "    stop        stop daemon"
+    echo "    enable      automatically start yusuke at login"
+    echo "    disable     disable daemon"
     echo "    --help      display this help and exit"
     echo "    --version   output version information and exit"
 }
@@ -90,6 +93,20 @@ function stop() {
     echo "Yusuke daemon stopped."
 }
 
+function enable_daemon() {
+    TARGET=$share_dir/yusuke.desktop
+    LINK_NAME=$HOME/.config/autostart/yusuke.desktop
+    command="ln -s $TARGET $LINK_NAME"
+    eval $command
+    echo $command
+}
+
+function disable_daemon() {
+    SYMLINK=$HOME/.config/autostart/yusuke.desktop
+    rm $SYMLINK
+    echo "Removed symlink $SYMLINK"
+}
+
 case ${1} in
     "--help")
         help_info
@@ -104,6 +121,12 @@ case ${1} in
 
     stop)
         stop ;;
+
+    "enable")
+        enable_daemon ;;
+
+    "disable")
+        disable_daemon ;;
 
     *)
         usage_info >&2
