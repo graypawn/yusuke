@@ -18,4 +18,5 @@ package() {
   cd "$srcdir/$pkgname"
   install -Dm755 yusuke "$pkgdir/usr/bin/yusuke"
   install -Dm755 yusuke.desktop "$pkgdir/usr/share/yusuke/yusuke.desktop"
+  install -Dm644 yusuke.conf "$pkgdir/usr/share/yusuke/yusuke.conf"
 }

@@ -5,11 +5,9 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-version=1.2
+version=1.4
 tmpdir=/tmp/yusuke
 pidfile=/tmp/yusuke/pid
-icon=system-software-update
-interval=1h
 share_dir=/usr/share/yusuke
 
 function version_info() {
@@ -74,10 +72,21 @@ function start() {
         echo "Yusuke is already running!"
         exit 1
     fi
+
     echo "Starting Yusuke..."
-    if ! [ -d $tmpdir ]; then
-        mkdir $tmpdir
+    mkdir -p $tmpdir
+
+    # check config file
+    user_config=$HOME/.config/yusuke/yusuke.conf
+    if ! [ -f $user_config ]; then
+        mkdir -p $HOME/.config/yusuke
+        cp $share_dir/yusuke.conf $user_config
+    elif ! [ -r $user_config ]; then
+        echo "$0: cannot read '$user_config': Permission denied" >&2
+        exit 1
     fi
+    source $user_config
+
     daemon &
     echo "Done!"
 }
