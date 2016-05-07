@@ -5,9 +5,11 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-version=1.4
-tmpdir=/tmp/yusuke
-pidfile=/tmp/yusuke/pid
+version=1.5
+tmpdir=/tmp/yusuke-$USER
+config_dir=$HOME/.config/yusuke
+pidfile=$tmpdir/pid
+user_config=$config_dir/yusuke.conf
 share_dir=/usr/share/yusuke
 
 function version_info() {
@@ -40,7 +42,7 @@ function is_connecting() {
 }
 
 function daemon() {
-    echo $BASHPID > $tmpdir/pid
+    echo $BASHPID > $pidfile
 
     while ! is_connecting; do
         sleep 1m
@@ -61,7 +63,9 @@ function daemon() {
 
 # check running daemon
 function is_running() {
-    if [ -r $tmpdir/pid ]; then
+    if ! [ -r $pidfile ]; then
+        return 1
+    elif ps -p $(cat $pidfile) -o pid= >/dev/null; then
         return 0
     fi
     return 1
@@ -77,9 +81,8 @@ function start() {
     mkdir -p $tmpdir
 
     # check config file
-    user_config=$HOME/.config/yusuke/yusuke.conf
     if ! [ -f $user_config ]; then
-        mkdir -p $HOME/.config/yusuke
+        mkdir -p $config_dir
         cp $share_dir/yusuke.conf $user_config
     elif ! [ -r $user_config ]; then
         echo "$0: cannot read '$user_config': Permission denied" >&2
@@ -92,13 +95,13 @@ function start() {
 }
 
 function stop() {
-    if ! [ -r $tmpdir/pid ]; then
+    if ! [ -r $pidfile ]; then
         echo "$0: No such yusuke daemon" >&2
         exit 1
     fi
 
-    kill $(cat $tmpdir/pid)
-    rm $tmpdir/pid
+    kill $(cat $pidfile)
+    rm $pidfile
     echo "Yusuke daemon stopped."
 }
 
@@ -106,8 +109,12 @@ function enable_daemon() {
     TARGET=$share_dir/yusuke.desktop
     LINK_NAME=$HOME/.config/autostart/yusuke.desktop
     command="ln -s $TARGET $LINK_NAME"
-    eval $command
-    echo $command
+    if [ -f $LINK_NAME ]; then
+        echo "$0: failed to create symbolic link '$LINK_NAME': File exists" >&2
+    else
+        eval $command
+        echo $command
+    fi
 }
 
 function disable_daemon() {
