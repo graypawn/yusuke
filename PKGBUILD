@@ -17,6 +17,6 @@ md5sums=('SKIP')
 package() {
   cd "$srcdir/$pkgname"
   install -Dm755 yusuke "$pkgdir/usr/bin/yusuke"
-  install -Dm755 yusuke.desktop "$pkgdir/usr/share/yusuke/yusuke.desktop"
-  install -Dm644 yusuke.conf "$pkgdir/usr/share/yusuke/yusuke.conf"
+  install -Dm644 yusuke@.service "$pkgdir/etc/systemd/system/yusuke@.service"
+  install -Dm644 yusuke@.timer "$pkgdir/etc/systemd/system/yusuke@.timer"
 }

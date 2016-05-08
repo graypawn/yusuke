@@ -5,12 +5,9 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-version=1.5
-tmpdir=/tmp/yusuke-$USER
-config_dir=$HOME/.config/yusuke
-pidfile=$tmpdir/pid
-user_config=$config_dir/yusuke.conf
-share_dir=/usr/share/yusuke
+export DISPLAY=:0
+VERSION=1.6.0
+ICON=system-software-update
 
 function version_info() {
     echo "Yusuke v$version"
@@ -28,123 +25,26 @@ function help_info() {
     usage_info
     echo "pacman update notifier"
     echo ""
-    echo "    start       start daemon"
-    echo "    stop        stop daemon"
-    echo "    enable      automatically start yusuke at login"
-    echo "    disable     disable daemon"
     echo "    --help      display this help and exit"
     echo "    --version   output version information and exit"
 }
 
-# check internet connection
-function is_connecting() {
-    ping -c 1 8.8.8.8 >/dev/null 2>&1
-}
+if [ -n "$1" ]; then
+    case $1 in
+        "--help")
+            help_info
+            exit 0 ;;
+        "--version")
+            version_info
+            exit 0 ;;
+        *)
+            usage_info >&2
+            exit 1 ;;
+    esac
+fi
 
-function daemon() {
-    echo $BASHPID > $pidfile
-
-    while ! is_connecting; do
-        sleep 1m
-    done
-
-    while true; do
-        fakeroot pacman -Sy --dbpath=$tmpdir >/dev/null
-        update_pkg=$(pacman -Qu)
-        pkg_num=$(echo "$update_pkg" | wc -l)
-
-        if [ pkg_num != 0 ]; then
-            notify-send "$pkg_num Update(s) Available" "$update_pkg" -i $icon
-        fi
-
-        sleep $interval
-    done
-}
-
-# check running daemon
-function is_running() {
-    if ! [ -r $pidfile ]; then
-        return 1
-    elif ps -p $(cat $pidfile) -o pid= >/dev/null; then
-        return 0
-    fi
-    return 1
-}
-
-function start() {
-    if is_running; then
-        echo "Yusuke is already running!"
-        exit 1
-    fi
-
-    echo "Starting Yusuke..."
-    mkdir -p $tmpdir
-
-    # check config file
-    if ! [ -f $user_config ]; then
-        mkdir -p $config_dir
-        cp $share_dir/yusuke.conf $user_config
-    elif ! [ -r $user_config ]; then
-        echo "$0: cannot read '$user_config': Permission denied" >&2
-        exit 1
-    fi
-    source $user_config
-
-    daemon &
-    echo "Done!"
-}
-
-function stop() {
-    if ! [ -r $pidfile ]; then
-        echo "$0: No such yusuke daemon" >&2
-        exit 1
-    fi
-
-    kill $(cat $pidfile)
-    rm $pidfile
-    echo "Yusuke daemon stopped."
-}
-
-function enable_daemon() {
-    TARGET=$share_dir/yusuke.desktop
-    LINK_NAME=$HOME/.config/autostart/yusuke.desktop
-    command="ln -s $TARGET $LINK_NAME"
-    if [ -f $LINK_NAME ]; then
-        echo "$0: failed to create symbolic link '$LINK_NAME': File exists" >&2
-    else
-        eval $command
-        echo $command
-    fi
-}
-
-function disable_daemon() {
-    SYMLINK=$HOME/.config/autostart/yusuke.desktop
-    rm $SYMLINK
-    echo "Removed symlink $SYMLINK"
-}
-
-case ${1} in
-    "--help")
-        help_info
-        exit 0 ;;
-
-    "--version")
-        version_info
-        exit 0 ;;
-
-    start)
-        start ;;
-
-    stop)
-        stop ;;
-
-    "enable")
-        enable_daemon ;;
-
-    "disable")
-        disable_daemon ;;
-
-    *)
-        usage_info >&2
-        exit 1 ;;
-esac
+update_pkg=`pacman -Qu`
+pkg_num=`pacman -Qu | wc -l`
+if [ $pkg_num != 0 ]; then
+    notify-send "$pkg_num Update(s) Available" "$update_pkg" -i $ICON
+fi

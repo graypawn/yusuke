@@ -1,0 +1,11 @@
+[Unit]
+Description=Run pacman update script on fixed times
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=1h
+Unit=yusuke@.service
+Persistent=true
+
+[Install]
+WantedBy=multi-user.target

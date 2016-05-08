@@ -1,0 +1,13 @@
+[Unit]
+Description=Pacman Update Notifier
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/pacman -Sy
+ExecStart=/usr/bin/sudo -u %i /usr/bin/yusuke
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
