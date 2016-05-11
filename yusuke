@@ -44,7 +44,7 @@ if [ -n "$1" ]; then
 fi
 
 update_pkg=`pacman -Qu`
-pkg_num=`pacman -Qu | wc -l`
+pkg_num=`pacman -Qu | grep -v ignored | wc -l`
 if [ $pkg_num != 0 ]; then
     notify-send "$pkg_num Update(s) Available" "$update_pkg" -i $ICON
 fi
