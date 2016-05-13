@@ -6,6 +6,7 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 import sys
+import os
 import subprocess
 import gi
 gi.require_version('Notify', '0.7')
@@ -13,8 +14,11 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Notify
 from gi.repository import Gtk
 
+
 ICON = 'system-software-update'
-VERSION = '1.7.0'
+VERSION = '1.7.2'
+cache_dir = os.path.expanduser('~')+'/.cache/yusuke'
+
 
 def versionInfo():
     print("Yusuke", VERSION)
@@ -35,6 +39,17 @@ def helpInfo(name):
     print("    systemctl enable yusuke@{USER}.timer")
 
 
+def isCheckedPackages(package_binary):
+    try:
+        cache = open(cache_dir + '/cache', 'rb')
+        if cache.read() == package_binary:
+            return True
+        else:
+            False
+    except (FileNotFoundError, PermissionError):
+        return False
+
+
 def closedCallback(notify_object):
     Gtk.main_quit()
 
@@ -48,8 +63,22 @@ def moreMessageCallback(notify_object, action_name, user_data):
     notify_object.show()
 
 
+def checkCallback(notify_object, action_name, package_binary):
+    try:
+        os.makedirs(cache_dir, exist_ok=True)
+        with open(cache_dir + '/cache', 'wb') as cache:
+            cache.write(package_binary)
+    except OSError as e:
+        print("yusuke: {}: {}".format(cache_dir + '/cache', e.args[1]))
+    notify_object.close()
+    Gtk.main_quit()
+
+
 def main():
     pacman_output = subprocess.check_output(['pacman', '-Qu'])
+    if isCheckedPackages(pacman_output):
+        return
+
     update_packages = pacman_output.decode("utf-8")
     package_num = update_packages.count('\n')
     if package_num == 0:
@@ -73,6 +102,13 @@ def main():
         'more',
         moreMessageCallback,
         [title, update_packages]
+    )
+    # If all packages are checked, then don't show this message again.
+    yusuke_notify.add_action(
+        'no_more',
+        "Don't show this message again",
+        checkCallback,
+        pacman_output
     )
     yusuke_notify.show()
     Gtk.main()
