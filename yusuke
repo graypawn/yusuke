@@ -1,50 +1,91 @@
-#!/bin/bash
-# Copyright (C) 2016  graypawn <choi.pawn@gmail.com>
-#
+#!/usr/bin/env python
+# Copyright (C) 2016  graypawn <choi.pawn @gmail.com>
+
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-export DISPLAY=:0
-VERSION=1.6.0
-ICON=system-software-update
+import sys
+import subprocess
+import gi
+gi.require_version('Notify', '0.7')
+gi.require_version('Gtk', '3.0')
+from gi.repository import Notify
+from gi.repository import Gtk
 
-function version_info() {
-    echo "Yusuke v$version"
-    echo "Copyrig ht (C) 2016 graypawn <choi.pawn@gmail.com>"
-    echo "GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>."
-    echo "This is free software: you are free to change and redistribute it."
-    echo "There is NO WARRANTY, to the extent permitted by law."
-}
+ICON = 'system-software-update'
+VERSION = '1.7.0'
 
-function usage_info() {
-    echo "Usage: yusuke [OPTION]"
-}
+def versionInfo():
+    print("Yusuke", VERSION)
+    print("Copyrig ht (C) 2016 graypawn <choi.pawn @gmail.com>")
+    print("GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.")
+    print("This is free software: you are free to change and redistribute it.")
+    print("There is NO WARRANTY, to the extent permitted by law.")
 
-function help_info() {
-    usage_info
-    echo "pacman update notifier"
-    echo ""
-    echo "    --help      display this help and exit"
-    echo "    --version   output version information and exit"
-}
 
-if [ -n "$1" ]; then
-    case $1 in
-        "--help")
-            help_info
-            exit 0 ;;
-        "--version")
-            version_info
-            exit 0 ;;
-        *)
-            usage_info >&2
-            exit 1 ;;
-    esac
-fi
+def helpInfo(name):
+    print("Usage: {} [OPTION]".format(name))
+    print("pacman update notifier")
+    print()
+    print("    --help      display this help and exit")
+    print("    --version   output version information and exit")
+    print()
+    print("yusuke@.timer checks periodically for updates.")
+    print("    systemctl enable yusuke@{USER}.timer")
 
-update_pkg=`pacman -Qu`
-pkg_num=`pacman -Qu | wc -l`
-if [ $pkg_num != 0 ]; then
-    notify-send "$pkg_num Update(s) Available" "$update_pkg" -i $ICON
-fi
+
+def closedCallback(notify_object):
+    Gtk.main_quit()
+
+
+def moreMessageCallback(notify_object, action_name, user_data):
+    notify_object.update(
+        user_data[0],
+        user_data[1],
+        ICON
+    )
+    notify_object.show()
+
+
+def main():
+    pacman_output = subprocess.check_output(['pacman', '-Qu'])
+    update_packages = pacman_output.decode("utf-8")
+    package_num = update_packages.count('\n')
+    if package_num == 0:
+        return
+
+    Notify.init('yusuke')
+    title = "{} Update(s) Available".format(package_num)
+
+    # Show only 10 packages.
+    if package_num <= 10:
+        message = update_packages
+    else:
+        message = "\n".join(update_packages.split('\n')[0:10])
+
+    yusuke_notify = Notify.Notification.new(title, message, ICON)
+    yusuke_notify.connect('closed', closedCallback)
+
+    # Pressing the 'more' button to show full packages.
+    yusuke_notify.add_action(
+        'more_message',
+        'more',
+        moreMessageCallback,
+        [title, update_packages]
+    )
+    yusuke_notify.show()
+    Gtk.main()
+
+
+if len(sys.argv) == 1:
+    main()
+elif sys.argv[1] == '--help':
+    helpInfo(sys.argv[0])
+    exit(0)
+elif sys.argv[1] == '--version':
+    versionInfo()
+    exit(0)
+else:
+    print("Try '{} --help' for more information.".format(sys.argv[0]))
+    exit(1)
