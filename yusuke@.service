@@ -1,11 +1,11 @@
 [Unit]
 Description=Pacman Update Notifier
-After=network-online.target
+After=network.target
 
 [Service]
 Type=simple
 ExecStartPre=/usr/bin/pacman -Sy
-ExecStart=/usr/bin/sudo -u %i /usr/bin/yusuke
+ExecStart=/usr/bin/sudo -u %i DISPLAY=:0 /usr/bin/yusuke
 User=root
 Group=root
 
