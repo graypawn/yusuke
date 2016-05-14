@@ -80,7 +80,9 @@ def main():
         return
 
     update_packages = pacman_output.decode("utf-8")
-    package_num = update_packages.count('\n')
+
+    # Exclude ignored packages for counting.
+    package_num = update_packages.count('\n')-update_packages.count('[ignored]')
     if package_num == 0:
         return
 
