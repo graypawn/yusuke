@@ -16,7 +16,7 @@ from gi.repository import Gtk
 
 
 ICON = 'system-software-update'
-VERSION = '1.7.2'
+VERSION = '1.7.4'
 cache_dir = os.path.expanduser('~')+'/.cache/yusuke'
 
 
@@ -69,7 +69,9 @@ def checkCallback(notify_object, action_name, package_binary):
         with open(cache_dir + '/cache', 'wb') as cache:
             cache.write(package_binary)
     except OSError as e:
-        print("yusuke: {}: {}".format(cache_dir + '/cache', e.args[1]))
+        print("yusuke: {}: {}".format(cache_dir + '/cache', e.args[1]),
+              file=sys.stderr)
+        exit(1)
     notify_object.close()
     Gtk.main_quit()
 
@@ -77,6 +79,7 @@ def checkCallback(notify_object, action_name, package_binary):
 def main():
     pacman_output = subprocess.check_output(['pacman', '-Qu'])
     if isCheckedPackages(pacman_output):
+        print("These packages have been checked")
         return
 
     update_packages = pacman_output.decode("utf-8")
@@ -84,6 +87,7 @@ def main():
     # Exclude ignored packages for counting.
     package_num = update_packages.count('\n')-update_packages.count('[ignored]')
     if package_num == 0:
+        print("Already up-to-date")
         return
 
     Notify.init('yusuke')
@@ -125,5 +129,6 @@ elif sys.argv[1] == '--version':
     versionInfo()
     exit(0)
 else:
-    print("Try '{} --help' for more information.".format(sys.argv[0]))
+    print("Try '{} --help' for more information.".format(sys.argv[0]),
+          file=sys.stderr)
     exit(1)
