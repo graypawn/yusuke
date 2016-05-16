@@ -1,3 +1,7 @@
 # pacman update notifier
-## INSTALL
-systemctl start yusuke@*user*.timer
+## Getting Started
+
+```bash
+yaourt -S yusuke
+systemctl start yusuke@username.timer    # Enter your uesrname.
+```
