@@ -16,7 +16,7 @@ from gi.repository import Gtk
 
 
 ICON = 'system-software-update'
-VERSION = '1.7.6'
+VERSION = '1.7.7'
 cache_dir = os.path.expanduser('~')+'/.cache/yusuke'
 
 
@@ -77,6 +77,7 @@ def checkCallback(notify_object, action_name, package_binary):
 
 
 def main():
+    # Warring: subprocess.CalledProcessError
     pacman_output = subprocess.check_output(['pacman', '-Qu'])
     if isCheckedPackages(pacman_output):
         print("These packages have been checked")
