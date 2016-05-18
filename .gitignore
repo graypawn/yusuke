@@ -1,4 +1,8 @@
 *~
 #*
 .#*
-AUR/
+/AUR/
+/build/
+/dist/
+/yusuke.egg-info/
+__pycache__/
