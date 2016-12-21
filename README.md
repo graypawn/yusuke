@@ -2,6 +2,10 @@
 ## Getting Started
 
 ```bash
+# Install Package
 yaourt -S yusuke
-systemctl start yusuke@username.timer    # Enter your uesrname.
+systemctl start yusuke-sync.timer
+
+# User
+yusuke --enable
 ```

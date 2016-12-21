@@ -5,6 +5,7 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
+import os
 import sys
 from yusuke.notify import notify
 from yusuke import __version__
@@ -25,8 +26,10 @@ def helpInfo(name):
     print("    --help      display this help and exit")
     print("    --version   output version information and exit")
     print()
-    print("yusuke@.timer checks periodically for updates.")
-    print("    systemctl enable yusuke@{USER}.timer")
+    print("# Administrator")
+    print("    systemctl enable yusuke-sync.timer")
+    print("# User")
+    print("    yusuke --enable")
 
 
 def main():
@@ -37,6 +40,11 @@ def main():
         exit(0)
     elif sys.argv[1] == '--version':
         versionInfo()
+        exit(0)
+    elif sys.argv[1] == '--enable':
+        os.system("cp /usr/share/yusuke/* ~/.config/systemd/user/")
+        os.system("systemctl --user enable yusuke-notify.timer")
+        os.system("systemctl --user start yusuke-notify.timer")
         exit(0)
     else:
         print("Try '{} --help' for more information.".format(sys.argv[0]),

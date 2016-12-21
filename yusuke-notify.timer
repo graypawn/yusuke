@@ -1,0 +1,11 @@
+[Unit]
+Description=Run pacman update notifier on fixed times
+
+[Timer]
+OnBootSec=7min
+OnUnitActiveSec=1d
+Unit=yusuke-notify.service
+Persistent=true
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=Pacman Sync Script for Yusuke
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/pacman -Sy
+
+[Install]
+WantedBy=default.target

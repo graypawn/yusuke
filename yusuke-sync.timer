@@ -3,9 +3,9 @@ Description=Run pacman update script on fixed times
 
 [Timer]
 OnBootSec=5min
-OnUnitActiveSec=1h
-Unit=yusuke@.service
+OnUnitActiveSec=1d
+Unit=yusuke-sync.service
 Persistent=true
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

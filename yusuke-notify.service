@@ -1,0 +1,9 @@
+[Unit]
+Description=Pacman Update Notifier
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/yusuke
+
+[Install]
+WantedBy=default.target
